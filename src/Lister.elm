@@ -18,6 +18,7 @@ type alias Model =
     { entry : String
     , entries : List ListEntry
     , id : Int
+    , entryError : Maybe String
     }
 
 
@@ -26,6 +27,7 @@ initialModel =
     { entry = ""
     , entries = []
     , id = 0
+    , entryError = Nothing
     }
 
 
@@ -43,7 +45,17 @@ view model =
         , renderItems model.entries
         , input [ id "the-input", onInput Entry, value model.entry ] []
         , button [ onClick Add ] [ text "Add" ]
+        , displayError model.entryError
         ]
+
+
+displayError entryError =
+    case entryError of
+        Nothing ->
+            div [] []
+
+        Just val ->
+            div [ class "alert alert-danger" ] [ text (val ++ "(Could disable the button instead)") ]
 
 
 renderItems items =
@@ -72,11 +84,15 @@ update message model =
         Add ->
             let
                 newModel =
-                    { model
-                        | entries = { id = model.id, text = model.entry } :: model.entries
-                        , entry = ""
-                        , id = model.id + 1
-                    }
+                    if model.entry /= "" then
+                        { model
+                            | entries = { id = model.id, text = model.entry } :: model.entries
+                            , entry = ""
+                            , id = model.id + 1
+                            , entryError = Nothing
+                        }
+                    else
+                        { model | entryError = Just "You must enter something" }
             in
                 ( newModel, setFocusOnInput )
 
